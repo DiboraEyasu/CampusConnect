@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
 const express = require("express");
 
+const authRoutes = require("./routes/authroutes");
+
 const app = express();
 
 // 1. Parse incoming JSON request bodies
-app.use(express.json());
+app.use(express.json({limit: "10kb"}));
 
 // 2. Health-check endpoint
 app.get("/api/health", (req, res) => {
@@ -19,7 +21,10 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// 3. Handle requests to endpoints that do not exist
+// 3. Authentication routes
+app.use("/api/auth", authRoutes);
+
+// 4. Handle requests to endpoints that do not exist
 app.use((req, res) => {
   res.status(404).json({
     status: "error",
