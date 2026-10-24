@@ -139,7 +139,7 @@ async function updateMyProfile(req, res) {
       req.userId,
       { $set: updates },
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true
       }
     );
