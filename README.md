@@ -31,7 +31,7 @@ A university community platform where students can connect, share ideas, discove
 
 ## In Progress
 
-- [ ] Community posts API
+- [x] Community posts API
 - [ ] Comments and likes
 - [ ] Campus events and attendance
 - [ ] Used textbook listings

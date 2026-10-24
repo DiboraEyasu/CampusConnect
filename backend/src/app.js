@@ -3,6 +3,7 @@ const express = require("express");
 
 const authRoutes = require("./routes/authroutes");
 const userRoutes = require("./routes/userRoutes");
+const postRoutes = require("./routes/postRoutes");
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.get("/api/health", (req, res) => {
 // 3. Authentication routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/posts", postRoutes);
 
 
 // 4. Handle requests to endpoints that do not exist
