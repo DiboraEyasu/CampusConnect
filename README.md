@@ -1,34 +1,67 @@
 # CampusConnect
 
-A university community platform for students to connect, share ideas, discover campus events, and buy or sell used textbooks.
+A university community platform where students can connect, share ideas, discover campus events, and buy or sell used textbooks.
 
-## Planned Technologies
-- Frontend: React + Vite
-- Backend: Node.js + Express
-- Database: MongoDB Atlas
-- Version Control: Git + GitHub
+## Technology Stack
+
+- **Frontend:** React + Vite
+- **Backend:** Node.js + Express
+- **Database:** MongoDB Atlas + Mongoose
+- **Authentication:** JSON Web Tokens (JWT)
+- **Password Security:** bcryptjs
+- **API Testing:** Postman
+- **Version Control:** Git + GitHub
 
 ## Project Structure
+
 - `frontend/` — User interface
-- `backend/` — Server and API
+- `backend/` — Express API, database models, and business logic
 - `docs/` — Project documentation
 
-## Current Progress
+## Implemented Features
 
-- [x] Project folders created
-- [x] `.gitignore` configured
-- [x] Git repository initialized
-- [x] Initial commit created and pushed to GitHub
-- [x] Backend project initialized
-- [x] Express server configured
-- [x] MongoDB Atlas connection configured
-- [x] User model created
-- [x] Student registration implemented
-- [x] Student login implemented
-- [x] Registration and login requests configured and tested in Postman
-- [ ] JWT authentication middleware
-- [ ] Student profile endpoints
-- [ ] Posts and community features
-- [ ] Events and textbook listings
-- [ ] Frontend setup
+- [x] Express backend setup
+- [x] MongoDB Atlas connection
+- [x] Student registration
+- [x] Secure password hashing
+- [x] Student login with JWT authentication
+- [x] Protected profile retrieval
+- [x] Profile updates with field validation
+- [x] Postman tests for authentication and profile endpoints
 
+## In Progress
+
+- [ ] Community posts API
+- [ ] Comments and likes
+- [ ] Campus events and attendance
+- [ ] Used textbook listings
+- [ ] React frontend integration
+
+## Running the Backend
+
+From the `backend/` directory:
+
+```bash
+npm install
+npm run dev
+```
+
+Configure your environment variables in `backend/.env`. Required settings include `MONGODB_URI`, `JWT_SECRET`, and optionally `PORT`.
+
+**Never commit `.env` or expose database credentials, JWT secrets, or real authentication tokens.**
+
+## API Endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/health` | Check API and database status |
+| POST | `/api/auth/register` | Register a student |
+| POST | `/api/auth/login` | Log in |
+| GET | `/api/users/me` | Retrieve the authenticated user's profile |
+| PATCH | `/api/users/me` | Update the authenticated user's profile |
+
+Protected endpoints require an `Authorization: Bearer <token>` header.
+
+## Development Approach
+
+CampusConnect is being developed incrementally, with backend endpoints tested in Postman before frontend integration.

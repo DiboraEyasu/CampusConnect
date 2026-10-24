@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const express = require("express");
 
 const authRoutes = require("./routes/authroutes");
+const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 
@@ -21,8 +22,11 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+
 // 3. Authentication routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+
 
 // 4. Handle requests to endpoints that do not exist
 app.use((req, res) => {
@@ -31,6 +35,8 @@ app.use((req, res) => {
     message: `Route ${req.method} ${req.originalUrl} not found`
   });
 });
+
+
 
 // 4. Export the configured Express application
 module.exports = app;
