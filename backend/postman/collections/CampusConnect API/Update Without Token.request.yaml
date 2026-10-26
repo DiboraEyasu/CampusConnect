@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{baseUrl}}/api/users/me"
+method: PATCH
+auth:
+  type: bearer
+  credentials:
+    token: vgeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YWRiYjhlZmVmMzgwMWI2MDJmYjNkMWQiLCJpYXQiOjE3OTI4MTM1MzQsImV4cCI6MTc5MjgxNzEzNH0.trQYjAoOModbues61D1gpfg9YJe7D-PY1u_oO-6dp48
+order: 7000

@@ -1,0 +1,6 @@
+name: CampusConnect Local
+values:
+  - key: baseUrl
+    value: http://localhost:3000
+  - key: newUrl
+    value: 'http://localhost:5000'

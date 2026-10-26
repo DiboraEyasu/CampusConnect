@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/api/posts/6adc33ebbc7b46d66693062c"
+method: PATCH
+body:
+  type: json
+  content: "{\r
+
+    \  \"content\": \"I updated my first CampusConnect post!\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{json_web_token_19ec}}"
+order: 11000

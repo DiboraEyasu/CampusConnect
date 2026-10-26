@@ -1,0 +1,7 @@
+workspace:
+  id: 200ea351-1c58-4d49-8277-2177bdbb7f5b
+cloudResources:
+  collections:
+    ../postman/collections/CampusConnect API: 59163151-4b962934-7378-4209-8955-870b8c6a20ff
+  environments:
+    ../postman/environments/CampusConnect Local.environment.yaml: 59163151-a68316ad-04da-438a-bf6b-bcf603101857

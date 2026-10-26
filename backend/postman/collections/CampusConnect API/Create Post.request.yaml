@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/api/posts"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"content\": \"My first CampusConnect post!\",\r
+
+    \  \"imageUrl\": \"\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{json_web_token_19ec}}"
+order: 9000

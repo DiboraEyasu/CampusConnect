@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/api/users/me"
+method: PATCH
+body:
+  type: json
+  content: "{\r
+
+    \  \"name\": \"Anu Campus\",\r
+
+    \  \"bio\": \"Computer science student building CampusConnect.\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{json_web_token_19ec}}"
+order: 5000
