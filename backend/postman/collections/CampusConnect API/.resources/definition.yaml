@@ -3,5 +3,16 @@ description: ""
 variables:
   - key: json_web_token_19ec
     secret: true
+    disabled: false
   - key: json_web_token_0xjo
     secret: true
+    disabled: false
+  - key: json_web_token_11kp
+    secret: true
+    disabled: false
+  - key: json_web_token_0ymj
+    secret: true
+    disabled: false
+  - key: json_web_token_06ux
+    secret: true
+    disabled: false

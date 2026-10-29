@@ -1,4 +1,15 @@
 $kind: http-request
-url: ""
-method: GET
+url: "{{newUrl}}/api/posts"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"content\": \"I have confirmed many tests \"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{json_web_token_0ymj}}"
 order: 15000

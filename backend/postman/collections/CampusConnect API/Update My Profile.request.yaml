@@ -1,11 +1,9 @@
 $kind: http-request
-url: "{{baseUrl}}/api/users/me"
+url: "{{newUrl}}/api/users/me"
 method: PATCH
 body:
   type: json
   content: "{\r
-
-    \  \"name\": \"Anu Campus\",\r
 
     \  \"bio\": \"Computer science student building CampusConnect.\"\r
 
@@ -13,5 +11,5 @@ body:
 auth:
   type: bearer
   credentials:
-    token: "{{json_web_token_19ec}}"
+    token: "{{json_web_token_06ux}}"
 order: 5000

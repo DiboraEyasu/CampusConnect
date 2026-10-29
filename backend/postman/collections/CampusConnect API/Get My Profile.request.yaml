@@ -1,8 +1,8 @@
 $kind: http-request
-url: "{{baseUrl}}/api/users/me"
+url: "{{newUrl}}/api/users/me"
 method: GET
 auth:
   type: bearer
   credentials:
-    token: "{{json_web_token_19ec}}"
+    token: "{{json_weyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YWRlYmMxNTIyODMyYTFlOGNiYjRhN2YiLCJpYXQiOjE3OTI5ODI1MDgsImV4cCI6MTc5Mjk4NjEwOH0.G1GGgRdov2RBulpxrtpkqw7Vrfj1A6UCzGhXGshvXdAeb_token_19ec}}"
 order: 4000

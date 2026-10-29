@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{newUrl}}/api/posts/POST_ID/comments"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"content\": \"This is my first CampusConnect comment!\"\r
+
+    }"
+order: 20000

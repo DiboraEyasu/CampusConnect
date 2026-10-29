@@ -1,11 +1,11 @@
 $kind: http-request
-url: "{{baseUrl}}/api/posts"
+url: "{{newUrl}}/api/posts"
 method: POST
 body:
   type: json
   content: "{\r
 
-    \  \"content\": \"My first CampusConnect post!\",\r
+    \  \"content\": \"My second CampusConnect post!\",\r
 
     \  \"imageUrl\": \"\"\r
 
@@ -13,5 +13,5 @@ body:
 auth:
   type: bearer
   credentials:
-    token: "{{json_web_token_19ec}}"
+    token: "{{json_web_token_11kp}}"
 order: 9000

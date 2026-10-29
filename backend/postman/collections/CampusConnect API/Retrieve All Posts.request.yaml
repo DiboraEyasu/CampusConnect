@@ -1,4 +1,4 @@
 $kind: http-request
-url: ""
+url: "{{newUrl}}/api/posts"
 method: GET
 order: 13000

@@ -1,5 +1,5 @@
 $kind: http-request
-url: "{{baseUrl}}/api/users/me"
+url: "{{newUrl}}/api/users/me"
 method: GET
 body:
   type: json

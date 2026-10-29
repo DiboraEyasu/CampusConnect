@@ -105,6 +105,24 @@ Configure the required environment variables in `backend/.env`:
 
 Never commit `.env` files, database credentials, JWT secrets, or real authentication tokens.
 
+## Running the Frontend
+
+CampusConnect Login + Real Posts Integration
+
+Copy src/App.jsx and src/App.css into your frontend/src folder, replacing those two files. Keep your existing main.jsx, index.css, package.json, and other project files.
+
+Run the backend from backend: npm run dev
+Run the frontend from frontend: npm run dev
+
+Sign in with your existing test account. After login, the dashboard requests:
+GET http://localhost:5000/api/posts?page=1&limit=10
+with Authorization: Bearer <your JWT>
+
+The feed displays real post content, author name, and creation date returned by the API. If your browser reports a CORS error, confirm app.js allows http://localhost:5173. The composer and like/comment actions are still preview-only and are not saved to the backend in this milestone.
+
+Security note: the JWT is held in React memory for this MVP. Refreshing the page signs you out. Never paste tokens or passwords into chat.
+
+
 ## Development Workflow
 
 CampusConnect is being developed incrementally:
@@ -115,3 +133,4 @@ CampusConnect is being developed incrementally:
 4. Validate authentication, permissions, and error handling.
 5. Connect the frontend.
 6. Document and commit completed milestones.
+

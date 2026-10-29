@@ -1,5 +1,5 @@
 $kind: http-request
 name: New Request
-url: ""
+url: "{{newUrl}}/api/posts/6adf35c6f2faba74fc8ecd3"
 method: GET
 order: 16000

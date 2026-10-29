@@ -1,5 +1,5 @@
 $kind: http-request
-url: "{{baseUrl}}/api/posts/6adc33ebbc7b46d66693062c"
+url: "{{newUrl}}/api/posts/6adec50aeb8c7c7a92127e0e"
 method: GET
 auth:
   type: bearer
