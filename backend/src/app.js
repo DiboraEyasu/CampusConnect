@@ -5,6 +5,7 @@ const authRoutes = require("./routes/authroutes");
 const userRoutes = require("./routes/userRoutes");
 const postRoutes = require("./routes/postRoutes");
 const commentRoutes = require("./routes/commentRoutes");
+const likeRoutes = require("./routes/likeRoutes");
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/posts", likeRoutes);
 app.use("/api", commentRoutes);
 
 
