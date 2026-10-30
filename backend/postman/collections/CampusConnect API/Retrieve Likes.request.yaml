@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{newUrl}}/api/posts/6adec50aeb8c7c7a92127e0e/likes"
+method: GET
+order: 28000
