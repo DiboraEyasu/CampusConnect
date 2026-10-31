@@ -209,8 +209,7 @@ async function updatePost(req, res) {
       },
       { $set: updates },
       {
-        returnDocument: "after",
-        runValidators: true
+        returnDocument: "after"
       }
     ).populate("author", "name avatarUrl");
 

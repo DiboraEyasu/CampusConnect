@@ -20,7 +20,7 @@ const likeSchema = new mongoose.Schema(
     }
 );
 
-// One user can like a particular post only once.
+// A user can like a particular post only once.
 likeSchema.index(
     { user: 1, post: 1 },
     { unique: true }

@@ -6,8 +6,17 @@ const userRoutes = require("./routes/userRoutes");
 const postRoutes = require("./routes/postRoutes");
 const commentRoutes = require("./routes/commentRoutes");
 const likeRoutes = require("./routes/likeRoutes");
+const cors = require("cors");
 
 const app = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // Allow requests from our Vite frontend during development
 app.use((req, res, next) => {
