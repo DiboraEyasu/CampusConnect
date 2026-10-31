@@ -1,12 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
+
 :root {
   font-family: 'DM Sans', sans-serif;
-  color: #e9f1eb;
-  background: #101713;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+
+  color-scheme: light;
+
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --panel-soft: #f7f9f7;
+  --panel-hover: #eef4ef;
+  --line: #e5eae6;
+  --text: #202820;
+  --muted: #68756b;
+  --dim: #849087;
+  --accent: #267b4b;
+  --accent-deep: #1e633b;
+  --accent-ink: #ffffff;
+  --radius: 12px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
   --bg: #101713;
   --panel: #18221c;
   --panel-soft: #1c2921;
@@ -18,10 +37,18 @@
   --accent: #75df9c;
   --accent-deep: #3da96c;
   --accent-ink: #102018;
-  --radius: 17px;
 }
+
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; background: var(--bg); }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+  color: var(--text);
+  transition: background-color .18s ease,
+              color .18s ease;
+}
 button, input, textarea { font: inherit; }
 button { cursor: pointer; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -151,4 +178,28 @@ h1,h2,p { margin-top: 0; }
   .auth-footnote,.auth-art { display: none; }
   .auth-form-panel { padding: 34px 23px 25px; }
   .auth-mobile-foot { display: block; text-align: center; }
+}
+
+.post-actions button.liked {
+  color: #24945b;
+  font-weight: 700;
+}
+
+.post-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* Persistent liked state */
+.post-actions button.liked {
+  color: #24945b;
+  font-weight: 700;
+}
+
+.post-actions button.liked span {
+  color: #24945b;
+}
+
+.post-actions button:disabled {
+  opacity: 0.65;
+  cursor: wait;
 }

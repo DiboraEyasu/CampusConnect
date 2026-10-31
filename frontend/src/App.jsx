@@ -62,6 +62,23 @@ function App() {
   const [active, setActive] = useState("Home");
   const [joined, setJoined] = useState({});
   const [notice, setNotice] = useState("");
+  const [postLikes, setPostLikes] = useState({});
+  const [likeBusy, setLikeBusy] = useState({});
+  const [activeCommentsPostId, setActiveCommentsPostId] = useState(null);
+  const [theme, setTheme] = useState(
+      () => localStorage.getItem("campus-theme") || "light"
+    );
+
+    useEffect(() => {
+      document.documentElement.dataset.theme = theme;
+      localStorage.setItem("campus-theme", theme);
+    }, [theme]);
+
+    function toggleTheme() {
+      setTheme((current) =>
+        current === "light" ? "dark" : "light"
+      );
+    }
 
   async function submitLogin(e) {
     e.preventDefault();
@@ -110,7 +127,57 @@ function App() {
           throw new Error(data.message || "Could not load posts.");
         }
         setPosts(data.posts);
-      } catch (error) {
+
+        // Load public like information for every post.
+        const likeResults = await Promise.all(
+          data.posts.map(async (post) => {
+            try {
+              const likeResponse = await fetch(
+                `http://localhost:5000/api/posts/${post._id}/likes`,
+                { signal: controller.signal }
+              );
+
+              const likeData = await likeResponse.json();
+
+              if (!likeResponse.ok || likeData.status !== "success") {
+                throw new Error("Could not load likes.");
+              }
+
+              const userId = currentUser?._id;
+
+              return {
+                postId: post._id,
+                likeCount: likeData.likeCount,
+                likedByMe: likeData.likes.some(
+                  (like) => String(like.user?._id) === String(userId)
+                ),
+              };
+            } catch (error) {
+              if (error.name === "AbortError") throw error;
+
+              return {
+                postId: post._id,
+                likeCount: 0,
+                likedByMe: false,
+              };
+            }
+          })
+        );
+
+        if (!controller.signal.aborted) {
+          setPostLikes((previous) => ({
+            ...previous,
+            ...Object.fromEntries(
+              likeResults.map((item) => [
+                item.postId,
+                {
+                  likeCount: item.likeCount,
+                  likedByMe: item.likedByMe,
+                },
+              ])
+            ),
+          }));
+        }      } catch (error) {
         if (error.name !== "AbortError") {
           setPostsError(error.message || "Could not load posts. Check your connection.");
         }
@@ -120,8 +187,7 @@ function App() {
     }
     loadPosts();
     return () => controller.abort();
-  }, [token]);
-
+}, [token, currentUser?._id]);
   function logout() {
     setToken("");
     setCurrentUser(null);
@@ -143,9 +209,9 @@ function App() {
             <h1>Good things<br/>happen <em>together.</em></h1>
             <p>A place to meet curious minds, share ideas, discover campus events, and find your community.</p>
             <div className="auth-perks">
-              <span><i>✳</i> Find your people</span>
-              <span><i>↗</i> Share what you know</span>
-              <span><i>◇</i> Make campus yours</span>
+              <span><i></i> Find your people</span>
+              <span><i></i> Share what you know</span>
+              <span><i></i> Make campus yours</span>
             </div>
           </div>
           <span className="auth-footnote">CAMPUSCONNECT · STUDENT COMMUNITY</span>
@@ -178,6 +244,71 @@ function App() {
     );
   }
 
+
+async function toggleLike(postId) {
+  if (likeBusy[postId]) return;
+
+  const currentLike = postLikes[postId];
+
+  if (!currentLike) return;
+
+  setLikeBusy((previous) => ({
+    ...previous,
+    [postId]: true,
+  }));
+
+  try {
+    const method = currentLike.likedByMe ? "DELETE" : "PUT";
+
+    const response = await fetch(
+      `http://localhost:5000/api/posts/${postId}/like`,
+      {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok || data.status !== "success") {
+      throw new Error(data.message || "Could not update your like.");
+    }
+
+    
+    // Refresh the real count and liked state from the database.
+    const likesResponse = await fetch(
+      `http://localhost:5000/api/posts/${postId}/likes`
+    );
+
+    const likesData = await likesResponse.json();
+
+    if (!likesResponse.ok || likesData.status !== "success") {
+      throw new Error("Like updated, but the latest count could not be loaded.");
+    }
+
+// Update the Like state after the server confirms success.
+    setPostLikes((previous) => ({
+      ...previous,
+      [postId]: {
+        likeCount: Math.max(
+          0,
+          (currentLike.likeCount ?? 0) +
+            (currentLike.likedByMe ? -1 : 1)
+        ),
+        likedByMe: !currentLike.likedByMe,
+      },
+    }));
+  } catch (error) {
+    setNotice(error.message || "Something went wrong while updating your like.");
+  } finally {
+    setLikeBusy((previous) => ({
+      ...previous,
+      [postId]: false,
+    }));
+  }
+}
  
 async function publishPost(e) {
   e.preventDefault();
@@ -222,6 +353,13 @@ async function publishPost(e) {
       data.post,
       ...currentPosts.filter((post) => post._id !== data.post._id),
     ]);
+    setPostLikes((previous) => ({
+      ...previous,
+      [data.post._id]: {
+        likeCount: 0,
+        likedByMe: false,
+      },
+    }));
 
     setDraft("");
     setNotice("Your post was published successfully!");
@@ -297,6 +435,17 @@ async function publishPost(e) {
             <label className="searchbox"><span>⌕</span><input aria-label="Search CampusConnect" placeholder="Search campus..." onChange={() => {}}/><kbd>⌘ K</kbd></label>
             <button className="icon-button" aria-label="Notifications" onClick={() => setNotice("You’re all caught up on notifications.")}>♧<i className="notification-dot"/></button>
             <button className="top-avatar" title="Signed in — click to sign out" onClick={logout}>{(currentUser?.name || "YO").split(/\\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</button>
+                        
+            <button
+              className="icon-button theme-toggle"
+              type="button"
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+              title="Switch theme"
+            >
+              {theme === "light" ? "☾" : "☀"}
+            </button>
+
           </div>
         </header>
 
@@ -356,7 +505,7 @@ async function publishPost(e) {
 
     <button
       type="button"
-      onClick={() => setNotice("Event sharing will be connected later.")}
+      onClick={() => ("Event sharing will be connected later.")}
     >
       <span className="tool-symbol event">▦</span> Event
     </button>
@@ -404,10 +553,53 @@ async function publishPost(e) {
                     <p className="post-content">{post.content}</p>
                     {post.imageUrl && <img className="post-image" src={post.imageUrl} alt="Post attachment" loading="lazy"/>}
                     <div className="post-divider"/>
-                    <div className="post-actions"><button onClick={() => setNotice("Likes are not connected to the backend yet.")}><span>♡</span> Like</button><button onClick={() => setNotice("Comments will connect to your comments API in our next step.")}><span>▤</span> Comment</button><button className="share-action" onClick={() => setNotice("Sharing will be added later.")}><span>↗</span> Share</button></div>
-                  </article>
+                    <div className="post-actions">
+                      <button
+                        type="button"
+                        onClick={() => toggleLike(post._id)}
+                        disabled={likeBusy[post._id]}
+                        className={postLikes[post._id]?.likedByMe ? "liked" : ""}
+                      >
+                        <span>
+                          {postLikes[post._id]?.likedByMe ? "♥" : "♡"}
+                        </span>
+                        {postLikes[post._id]?.likedByMe ? "Liked" : "Like"}
+                        {" "}
+                        ({postLikes[post._id]?.likeCount ?? 0})
+                      </button>
+
+                     <button
+                        type="button"
+                        onClick={() => setActiveCommentsPostId(post._id)}
+                      >
+                        <span>💬</span> Comment
+                      </button>
+                      
+
+                      <button
+                        type="button"
+                        className="share-action"
+                        onClick={() => setNotice("Sharing will be added later.")}
+                      >
+                        <span>↗</span> Share
+                      </button>
+                    </div>                  
+                    
+                    </article>
                 );
               })}
+              {activeCommentsPostId && (
+                        <div>
+                          Comments opened for post: {activeCommentsPostId}
+
+                          <button
+                            type="button"
+                            onClick={() => setActiveCommentsPostId(null)}
+                          >
+                            Close
+                          </button>
+                        </div>
+                      )}
             </div>
             {!postsLoading && posts.length > 0 && <div className="load-more">Showing {posts.length} posts · {posts.length} loaded on this page</div>}
           </section>
@@ -423,7 +615,7 @@ async function publishPost(e) {
 
             <section className="side-panel events-panel">
               <div className="side-title"><div><span className="eyebrow">SAVE YOUR SPOT</span><h2>Upcoming events</h2></div><button className="text-link" onClick={() => chooseNav("Events")}>View all ↗</button></div>
-              <div className="events-list">{events.map((event) => <button className="event-row" key={event.title} onClick={() => setNotice(`${event.title}: event details will be connected later.`)}><span className="event-date"><small>{event.month}</small><strong>{event.day}</strong></span><span className="event-copy"><strong>{event.title}</strong><small>{event.detail}</small><i>{event.type}</i></span><span className="event-arrow">↗</span></button>)}</div>
+              <div className="events-list">{events.map((event) => <button className="event-row" key={event.title} onClick={() => (`${event.title}: event details will be connected later.`)}><span className="event-date"><small>{event.month}</small><strong>{event.day}</strong></span><span className="event-copy"><strong>{event.title}</strong><small>{event.detail}</small><i>{event.type}</i></span><span className="event-arrow">↗</span></button>)}</div>
             </section>
 
             <section className="side-panel marketplace-panel">
