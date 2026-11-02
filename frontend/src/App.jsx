@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Marketplace from "./Marketplace";
 import "./App.css";
 
 const starterPosts = [
@@ -85,7 +86,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/events?upcoming=true&page=1&limit=10",
+        "https://campusconnect-8-d1pg.onrender.com/api/events?upcoming=true&page=1&limit=10",
         { signal: controller.signal }
       );
 
@@ -153,7 +154,7 @@ function App() {
     setLoginBusy(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch("https://campusconnect-8-d1pg.onrender.com/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password }),
@@ -185,7 +186,7 @@ function App() {
       setPostsLoading(true);
       setPostsError("");
       try {
-        const response = await fetch("http://localhost:5000/api/posts?page=1&limit=10", {
+        const response = await fetch("https://campusconnect-8-d1pg.onrender.com/api/posts?page=1&limit=10", {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         });
@@ -200,7 +201,7 @@ function App() {
           data.posts.map(async (post) => {
             try {
               const likeResponse = await fetch(
-                `http://localhost:5000/api/posts/${post._id}/likes`,
+                `https://campusconnect-8-d1pg.onrender.com/api/posts/${post._id}/likes`,
                 { signal: controller.signal }
               );
 
@@ -334,7 +335,7 @@ async function openComments(postId) {
   setCommentError("");
   setCommentDraft("");
   try {
-    const response = await fetch(`http://localhost:5000/api/posts/${postId}/comments?page=1&limit=50`);
+    const response = await fetch(`https://campusconnect-8-d1pg.onrender.com/api/posts/${postId}/comments?page=1&limit=50`);
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !Array.isArray(data.comments)) {
       throw new Error(data.message || "Unable to load comments.");
@@ -354,7 +355,7 @@ async function submitComment(event) {
   setCommentBusy(true);
   setCommentError("");
   try {
-    const response = await fetch(`http://localhost:5000/api/posts/${activeCommentsPostId}/comments`, {
+    const response = await fetch(`https://campusconnect-8-d1pg.onrender.com/api/posts/${activeCommentsPostId}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ content }),
@@ -391,7 +392,7 @@ async function toggleLike(postId) {
     const method = currentLike.likedByMe ? "DELETE" : "PUT";
 
     const response = await fetch(
-      `http://localhost:5000/api/posts/${postId}/like`,
+      `https://campusconnect-8-d1pg.onrender.com/api/posts/${postId}/like`,
       {
         method,
         headers: {
@@ -409,7 +410,7 @@ async function toggleLike(postId) {
     
     // Refresh the real count and liked state from the database.
     const likesResponse = await fetch(
-      `http://localhost:5000/api/posts/${postId}/likes`
+      `https://campusconnect-8-d1pg.onrender.com/api/posts/${postId}/likes`
     );
 
     const likesData = await likesResponse.json();
@@ -461,7 +462,7 @@ async function publishPost(e) {
   setNotice("");
 
   try {
-    const response = await fetch("http://localhost:5000/api/posts", {
+    const response = await fetch("https://campusconnect-8-d1pg.onrender.com/api/posts", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
