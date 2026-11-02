@@ -1,41 +1,23 @@
 const mongoose = require("mongoose");
 const express = require("express");
 
-const authRoutes = require("./routes/authroutes");
+const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const postRoutes = require("./routes/postRoutes");
 const commentRoutes = require("./routes/commentRoutes");
 const likeRoutes = require("./routes/likeRoutes");
+const eventRoutes = require("./routes/eventRoutes");
+const cors = require("cors");
 
 const app = express();
 
-// Allow requests from our Vite frontend during development
-app.use((req, res, next) => {
-  const allowedOrigin = "http://localhost:5173";
-
-  res.setHeader("Vary", "Origin");
-
-  if (req.headers.origin === allowedOrigin) {
-    res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
-  }
-
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PATCH, DELETE, OPTIONS"
-  );
-
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
-
-  // Handle browser preflight requests
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // Parse incoming JSON request bodies
 app.use(express.json({ limit: "10kb" }));
@@ -60,6 +42,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/posts", likeRoutes);
+app.use("/api/events", eventRoutes);
 app.use("/api", commentRoutes);
 
 

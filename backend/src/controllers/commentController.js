@@ -186,7 +186,7 @@ async function updateComment(req, res) {
     const comment = await Comment.findOneAndUpdate(
       { _id: id, author: req.userId },
       { $set: { content: content.trim() } },
-      { returnDocument: "after", runValidators: true }
+      { returnDocument: "after" }
     ).populate("author", "name avatarUrl");
 
     if (!comment) {

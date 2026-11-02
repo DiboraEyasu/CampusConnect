@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 const Like = require("../models/Like");
 const Post = require("../models/Post");
@@ -36,7 +35,7 @@ const likePost = async (req, res, next) => {
             },
             {
                 upsert: true,
-                new: true,
+                returnDocument: "after",
                 setDefaultsOnInsert: true
             }
         );

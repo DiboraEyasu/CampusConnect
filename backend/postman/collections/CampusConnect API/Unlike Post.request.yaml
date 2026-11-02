@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{newUrl}}/api/posts/6ae248ded9df067b60817f71/like"
+method: PUT
+auth:
+  type: bearer
+  credentials:
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YWU0N2QwZDE3MjYyYjk0MmRhZmI1OTYiLCJpYXQiOjE3OTMzNTkxMTcsImV4cCI6MTc5MzM2MjcxN30.2VZ_5sf8I0B4X4otjenphQxSuTyXytFgohbH3KjhWi8
+order: 17000
