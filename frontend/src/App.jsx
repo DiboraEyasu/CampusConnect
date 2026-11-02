@@ -44,6 +44,24 @@ function Avatar({ initials, tone = "" }) {
   return <span className={`avatar ${tone}`}>{initials}</span>;
 }
 
+const navIconPaths = {
+  Home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
+  Explore: <><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4M8 13l2-4 4-2-2 4z"/></>,
+  Groups: <><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
+  Events: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></>,
+  Marketplace: <><path d="M3 9h18l-1.5-5h-15zM5 9v11h14V9M9 20v-6h6v6"/></>,
+  Messages: <><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></>,
+};
+function NavIcon({ label, size = 19 }) {
+  return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{navIconPaths[label]}</svg>;
+}
+function HeartIcon({ filled = false, size = 18 }) {
+  return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8z"/></svg>;
+}
+function MessageIcon() {
+  return <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg>;
+}
+
 function App() {
   // Authentication is kept in memory for this MVP; refreshing signs the student out.
   const [token, setToken] = useState("");
@@ -53,6 +71,50 @@ function App() {
   const [loginError, setLoginError] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
   const [posts, setPosts] = useState([]);
+  
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+  if (!token) return;
+
+  const controller = new AbortController();
+
+  async function loadEvents() {
+    setEventsLoading(true);
+    setEventsError("");
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/events?upcoming=true&page=1&limit=10",
+        { signal: controller.signal }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || data.status !== "success") {
+        throw new Error(data.message || "Could not load events.");
+      }
+
+      setEvents(data.data.events);
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        setEventsError(error.message || "Could not load events.");
+      }
+    } finally {
+      if (!controller.signal.aborted) {
+        setEventsLoading(false);
+      }
+    }
+  }
+
+  loadEvents();
+
+  return () => controller.abort();
+}, [token]);
+
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState("");
+
   const [postsLoading, setPostsLoading] = useState(false);
   const [postsError, setPostsError] = useState("");
   const [draft, setDraft] = useState("");
@@ -65,6 +127,11 @@ function App() {
   const [postLikes, setPostLikes] = useState({});
   const [likeBusy, setLikeBusy] = useState({});
   const [activeCommentsPostId, setActiveCommentsPostId] = useState(null);
+  const [commentsByPost, setCommentsByPost] = useState({});
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [commentBusy, setCommentBusy] = useState(false);
+  const [commentError, setCommentError] = useState("");
   const [theme, setTheme] = useState(
       () => localStorage.getItem("campus-theme") || "light"
     );
@@ -143,13 +210,15 @@ function App() {
                 throw new Error("Could not load likes.");
               }
 
-              const userId = currentUser?._id;
+              // authenticate middleware verifies JWT payload.sub; use that same identity.
+              const userId = getAuthenticatedUserId(token);
+              const likes = Array.isArray(likeData.likes) ? likeData.likes : [];
 
               return {
                 postId: post._id,
-                likeCount: likeData.likeCount,
-                likedByMe: likeData.likes.some(
-                  (like) => String(like.user?._id) === String(userId)
+                likeCount: Number(likeData.likeCount) || 0,
+                likedByMe: Boolean(userId) && likes.some(
+                  (like) => String(like.user?._id || like.user) === userId
                 ),
               };
             } catch (error) {
@@ -157,8 +226,9 @@ function App() {
 
               return {
                 postId: post._id,
-                likeCount: 0,
+                likeCount: null,
                 likedByMe: false,
+                loadError: true,
               };
             }
           })
@@ -170,10 +240,13 @@ function App() {
             ...Object.fromEntries(
               likeResults.map((item) => [
                 item.postId,
-                {
-                  likeCount: item.likeCount,
-                  likedByMe: item.likedByMe,
-                },
+                item.loadError
+                  ? { ...(previous[item.postId] || {}), likeLoadError: true }
+                  : {
+                      likeCount: item.likeCount,
+                      likedByMe: item.likedByMe,
+                      likeLoadError: false,
+                    },
               ])
             ),
           }));
@@ -201,7 +274,7 @@ function App() {
       <main className="auth-screen">
         <section className="auth-brand-panel">
           <a className="brand auth-brand" href="#" onClick={(e) => e.preventDefault()}>
-            <span className="brand-mark"><span>c</span></span>
+            <span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 20V9m0 5c-5 0-8-3-8-8 5 0 8 3 8 8Zm0 2c0-5 3-8 8-8 0 5-3 8-8 8Z"/></svg></span>
             <span>campus<span className="brand-light">connect</span></span>
           </a>
           <div className="auth-message">
@@ -215,7 +288,7 @@ function App() {
             </div>
           </div>
           <span className="auth-footnote">CAMPUSCONNECT · STUDENT COMMUNITY</span>
-          <div className="auth-art" aria-hidden="true"><span className="auth-orb"/><span className="auth-art-ring">c</span><span className="auth-art-spark">✳</span></div>
+          <div className="auth-art" aria-hidden="true"><span className="auth-orb"/><span className="auth-art-ring">✳</span><span className="auth-art-spark">✳</span></div>
         </section>
 
         <section className="auth-form-panel">
@@ -244,6 +317,63 @@ function App() {
     );
   }
 
+
+function getAuthenticatedUserId(authToken) {
+  try {
+    const payloadPart = authToken.split(".")[1];
+    const payload = JSON.parse(atob(payloadPart.replace(/-/g, "+").replace(/_/g, "/")));
+    return String(payload.sub || "");
+  } catch {
+    return "";
+  }
+}
+
+async function openComments(postId) {
+  setActiveCommentsPostId(postId);
+  setCommentsLoading(true);
+  setCommentError("");
+  setCommentDraft("");
+  try {
+    const response = await fetch(`http://localhost:5000/api/posts/${postId}/comments?page=1&limit=50`);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !Array.isArray(data.comments)) {
+      throw new Error(data.message || "Unable to load comments.");
+    }
+    setCommentsByPost((previous) => ({ ...previous, [postId]: data.comments }));
+  } catch (error) {
+    setCommentError(error.message || "Unable to load comments. Check your connection.");
+  } finally {
+    setCommentsLoading(false);
+  }
+}
+
+async function submitComment(event) {
+  event.preventDefault();
+  const content = commentDraft.trim();
+  if (!activeCommentsPostId || !content || commentBusy) return;
+  setCommentBusy(true);
+  setCommentError("");
+  try {
+    const response = await fetch(`http://localhost:5000/api/posts/${activeCommentsPostId}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ content }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.status !== "success" || !data.comment) {
+      throw new Error(data.message || "Could not publish your comment.");
+    }
+    setCommentsByPost((previous) => ({
+      ...previous,
+      [activeCommentsPostId]: [data.comment, ...(previous[activeCommentsPostId] || [])],
+    }));
+    setCommentDraft("");
+  } catch (error) {
+    setCommentError(error.message || "Could not publish your comment.");
+  } finally {
+    setCommentBusy(false);
+  }
+}
 
 async function toggleLike(postId) {
   if (likeBusy[postId]) return;
@@ -288,16 +418,14 @@ async function toggleLike(postId) {
       throw new Error("Like updated, but the latest count could not be loaded.");
     }
 
-// Update the Like state after the server confirms success.
+const userId = getAuthenticatedUserId(token);
     setPostLikes((previous) => ({
       ...previous,
       [postId]: {
-        likeCount: Math.max(
-          0,
-          (currentLike.likeCount ?? 0) +
-            (currentLike.likedByMe ? -1 : 1)
+        likeCount: likesData.likeCount,
+        likedByMe: likesData.likes.some(
+          (like) => String(like.user?._id || like.user) === String(userId)
         ),
-        likedByMe: !currentLike.likedByMe,
       },
     }));
   } catch (error) {
@@ -373,20 +501,24 @@ async function publishPost(e) {
 }
 
 
-  function chooseNav(label) {
-    setActive(label);
-    if (label !== "Home") {
-      setNotice(`${label} is a preview section. We'll connect it after the main feed.`);
-    } else {
-      setNotice("");
-    }
+
+function chooseNav(label) {
+  setActive(label);
+
+  if (label === "Home" || label === "Events") {
+    setNotice("");
+  } else {
+    setNotice(
+      `${label} is a preview section. We'll connect it after the main feed.`
+    );
   }
+}
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <a className="brand" href="#" onClick={(e) => { e.preventDefault(); chooseNav("Home"); }}>
-          <span className="brand-mark"><span>c</span></span>
+          <span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 20V9m0 5c-5 0-8-3-8-8 5 0 8 3 8 8Zm0 2c0-5 3-8 8-8 0 5-3 8-8 8Z"/></svg></span>
           <span>campus<span className="brand-light">connect</span></span>
         </a>
 
@@ -398,17 +530,9 @@ async function publishPost(e) {
 
         <p className="nav-label">MENU</p>
         <nav className="main-nav" aria-label="Main navigation">
-          {[
-            ["Home", "⌂"],
-            ["Explore", "⌕"],
-            ["Groups", "◉"],
-            ["Events", "▦"],
-            ["Marketplace", "◇"],
-            ["Messages", "↗"],
-          ].map(([label, symbol]) => (
-            <button key={label} className={`nav-item ${active === label ? "selected" : ""}`} onClick={() => chooseNav(label)}>
-              <span className="nav-symbol">{symbol}</span><span>{label}</span>
-              {label === "Messages" && <span className="nav-count">2</span>}
+          {["Home", "Explore", "Groups", "Events", "Marketplace", "Messages"].map((label) => (
+            <button key={label} type="button" className={`nav-item ${active === label ? "selected" : ""}`} onClick={() => chooseNav(label)}>
+              <span className="nav-symbol"><NavIcon label={label}/></span><span>{label}</span>
             </button>
           ))}
         </nav>
@@ -451,15 +575,66 @@ async function publishPost(e) {
 
         <div className="content-grid">
           <section className="feed-column">
+            
+{active === "Events" ? (
+  <section className="events-page">
+    <div className="section-heading">
+      <div>
+        <span className="eyebrow">YOUR CAMPUS</span>
+        <h2>Campus Events</h2>
+        <p>Discover what's happening around campus.</p>
+      </div>
+    </div>
+
+    {eventsLoading && (
+      <div className="notice" role="status">
+        Loading campus events...
+      </div>
+    )}
+
+    {eventsError && (
+      <div className="notice" role="alert">
+        {eventsError}
+      </div>
+    )}
+
+    {!eventsLoading && !eventsError && events.length === 0 && (
+      <div className="notice">
+        No upcoming events available.
+      </div>
+    )}
+
+    <div className="events-page-list">
+      {events.map((event) => (
+        <article className="panel event-page-card" key={event._id}>
+          <span className="eyebrow">
+            {event.category || "CAMPUS EVENT"}
+          </span>
+
+          <h3>{event.title}</h3>
+
+          {event.startAt && (
+            <p>
+              <strong>Date:</strong>{" "}
+              {new Date(event.startAt).toLocaleString()}
+            </p>
+          )}
+
+          {event.location && (
+            <p>
+              <strong>Location:</strong> {event.location}
+            </p>
+          )}
+        </article>
+      ))}
+    </div>
+  </section>
+) : (
+  <>
+
             <div className="welcome-row">
               <div><div className="eyebrow"><span className="online-pulse"/> YOUR CAMPUS, YOUR COMMUNITY</div><h1>Good morning, <em>{currentUser?.name?.split(" ")[0] || "student"}.</em></h1><p>What’s happening around campus today?</p></div>
-              <div className="date-chip"><span>THU</span><strong>29</strong><small>OCTOBER</small></div>
-            </div>
 
-            <div className="spotlight">
-              <div className="spotlight-copy"><span className="spotlight-kicker">CAMPUS HIGHLIGHT <span>✦</span></span><h2>Better together.</h2><p>Meet curious minds, share what you know, and find your next big idea.</p><button onClick={() => chooseNav("Groups")}>Discover communities <span>→</span></button></div>
-              <div className="spotlight-art" aria-hidden="true"><span className="orb orb-one"/><span className="orb orb-two"/><span className="art-star">✳</span><span className="art-ring">c</span><span className="art-leaf">✦</span></div>
-              <span className="spotlight-number">01 / COMMUNITY</span>
             </div>
 
             <div className="section-heading"><div><span className="eyebrow">THE CONVERSATION</span><h2>Campus feed <span className="live-label">LIVE</span></h2></div><button className="filter-button" onClick={() => setNotice("Showing the latest community posts.")}>Latest <span>⌄</span></button></div>
@@ -560,9 +735,7 @@ async function publishPost(e) {
                         disabled={likeBusy[post._id]}
                         className={postLikes[post._id]?.likedByMe ? "liked" : ""}
                       >
-                        <span>
-                          {postLikes[post._id]?.likedByMe ? "♥" : "♡"}
-                        </span>
+                        <HeartIcon filled={Boolean(postLikes[post._id]?.likedByMe)} />
                         {postLikes[post._id]?.likedByMe ? "Liked" : "Like"}
                         {" "}
                         ({postLikes[post._id]?.likeCount ?? 0})
@@ -570,9 +743,9 @@ async function publishPost(e) {
 
                      <button
                         type="button"
-                        onClick={() => setActiveCommentsPostId(post._id)}
+                        onClick={() => activeCommentsPostId === post._id ? setActiveCommentsPostId(null) : openComments(post._id)}
                       >
-                        <span>💬</span> Comment
+                        <MessageIcon /> Comment
                       </button>
                       
 
@@ -589,20 +762,39 @@ async function publishPost(e) {
                 );
               })}
               {activeCommentsPostId && (
-                        <div>
-                          Comments opened for post: {activeCommentsPostId}
-
-                          <button
-                            type="button"
-                            onClick={() => setActiveCommentsPostId(null)}
-                          >
-                            Close
-                          </button>
-                        </div>
-                      )}
+                <section className="comments-panel" aria-label="Post comments">
+                  <div className="comments-panel-heading">
+                    <h3>Discussion</h3>
+                    <button type="button" className="comments-close" onClick={() => setActiveCommentsPostId(null)} aria-label="Close comments">×</button>
+                  </div>
+                  {commentsLoading && <p className="comments-muted">Loading comments…</p>}
+                  {commentError && <p className="comments-error" role="alert">{commentError}</p>}
+                  {!commentsLoading && !commentError && (commentsByPost[activeCommentsPostId] || []).length === 0 && <p className="comments-muted">No comments yet. Start the conversation.</p>}
+                  <div className="comments-list">
+                    {(commentsByPost[activeCommentsPostId] || []).map((comment) => (
+                      <article className="comment-item" key={comment._id}>
+                        <div className="comment-meta"><strong>{comment.author?.name || "CampusConnect student"}</strong><time>{comment.createdAt ? new Date(comment.createdAt).toLocaleString() : ""}</time></div>
+                        <p>{comment.content}</p>
+                      </article>
+                    ))}
+                  </div>
+                  <form className="comment-form" onSubmit={submitComment}>
+                    <input aria-label="Write a comment" value={commentDraft} maxLength={1000} onChange={(event) => setCommentDraft(event.target.value)} placeholder="Write a thoughtful comment…" />
+                    <button type="submit" disabled={!commentDraft.trim() || commentBusy}>{commentBusy ? "Sending…" : "Send"}</button>
+                  </form>
+                </section>
+              )}
             </div>
-            {!postsLoading && posts.length > 0 && <div className="load-more">Showing {posts.length} posts · {posts.length} loaded on this page</div>}
-          </section>
+         
+{!postsLoading && posts.length > 0 && (
+  <div className="load-more">
+    Showing {posts.length} posts · {posts.length} loaded on this page
+  </div>
+)}
+  </>
+)}
+</section>
+
 
           <aside className="right-column">
             <section className="side-panel group-panel">

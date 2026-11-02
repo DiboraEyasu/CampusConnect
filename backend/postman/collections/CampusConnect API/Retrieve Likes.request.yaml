@@ -1,4 +1,4 @@
 $kind: http-request
-url: "{{newUrl}}/api/posts/6adec50aeb8c7c7a92127e0e/likes"
+url: "{{newUrl}}/api/posts/6ae248ded9df067b60817f71/likes"
 method: GET
 order: 28000

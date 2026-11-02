@@ -1,9 +1,0 @@
-$kind: http-request
-name: New Request
-url: "{{newUrl}}/api/posts/6adf35c6f2faba74fc8ecd3"
-method: PATCH
-auth:
-  type: bearer
-  credentials:
-    token: 6adf35c6f2faba74fc8ecd3d
-order: 17000
