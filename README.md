@@ -2,6 +2,8 @@
 
 A university community platform for students to connect, share ideas, discover campus events, and buy or sell used textbooks.
 
+# It is live on https://my-campus-connect.onrender.com/
+
 ## Stack
 - Frontend: React + Vite
 - Backend: Node.js + Express
